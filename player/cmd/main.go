@@ -16,6 +16,7 @@ func main() {
 	tcpPort := flag.String("tcpPort", "", "tcp port for player to listen to client connections")
 	fbsFile := flag.String("fbsFile", "", "fbs file to serve to all connecting clients")
 	logLevel := flag.String("logLevel", "info", "change logging level")
+	vncPass := flag.String("vncPass", "", "password on incoming vnc connections to the proxy, defaults to no password")
 
 	flag.Parse()
 	logger.SetLogLevel(*logLevel)
@@ -52,9 +53,14 @@ func main() {
 		&encodings.HextileEncoding{},
 	}
 
+	secHandlers := []server.SecurityHandler{&server.ServerAuthNone{}}
+
+	if *vncPass != "" {
+		secHandlers = []server.SecurityHandler{&server.ServerAuthVNC{*vncPass}}
+	}
+
 	cfg := &server.ServerConfig{
-		//SecurityHandlers: []SecurityHandler{&ServerAuthNone{}, &ServerAuthVNC{}},
-		SecurityHandlers: []server.SecurityHandler{&server.ServerAuthNone{}},
+		SecurityHandlers: secHandlers,
 		Encodings:        encs,
 		PixelFormat:      common.NewPixelFormat(32),
 		ClientMessages:   server.DefaultClientMessages,
